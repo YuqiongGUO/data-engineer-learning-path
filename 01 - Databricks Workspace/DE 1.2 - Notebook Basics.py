@@ -213,7 +213,7 @@ print("Hello Python!")
 
 # MAGIC %md 
 # MAGIC 
-# MAGIC The **`../Includes/Classroom-Setup-01.2`** notebook we referenced includes logic to create and **`USE`** a database, as well as creating the temp view **`demo_temp_vw`**.
+# MAGIC The **`../Includes/Classroom-Setup-01.2`** notebook we referenced includes logic to create and **`USE`** a schema, as well as creating the temp view **`demo_temp_vw`**.
 # MAGIC 
 # MAGIC We can see this temp view is now available in our current notebook session with the following query.
 
@@ -230,7 +230,7 @@ print("Hello Python!")
 # MAGIC 
 # MAGIC These "provided" variables, functions and other objects should be easily identifiable in that they are part of the **`DA`** object, which is an instance of **`DBAcademyHelper`**.
 # MAGIC 
-# MAGIC With that in mind, most lessons will use variables derived from your username to organize files and databases. 
+# MAGIC With that in mind, most lessons will use variables derived from your username to organize files and schemas. 
 # MAGIC 
 # MAGIC This pattern allows us to avoid collision with other users in shared a workspace.
 # MAGIC 
@@ -265,7 +265,7 @@ print(f"DA.schema_name:       {DA.schema_name}")
 # MAGIC %md
 # MAGIC 
 # MAGIC ## Databricks Utilities
-# MAGIC Databricks notebooks provide a number of utility commands for configuring and interacting with the environment: <a href="https://docs.databricks.com/user-guide/dev-tools/dbutils.html" target="_blank">dbutils docs</a>
+# MAGIC Databricks notebooks include a **`dbutils`** object that provides a number of utility commands for configuring and interacting with the environment: <a href="https://docs.databricks.com/user-guide/dev-tools/dbutils.html" target="_blank">dbutils docs</a>
 # MAGIC 
 # MAGIC Throughout this course, we'll occasionally use **`dbutils.fs.ls()`** to list out directories of files from Python cells.
 
@@ -361,7 +361,7 @@ display(files)
 # MAGIC 
 # MAGIC At the end of each lesson you will see the following command, **`DA.cleanup()`**.
 # MAGIC 
-# MAGIC This method drops lesson-specific databases and working directories in an attempt to keep your workspace clean and maintain the immutability of each lesson.
+# MAGIC This method drops lesson-specific schemas and working directories in an attempt to keep your workspace clean and maintain the immutability of each lesson.
 # MAGIC 
 # MAGIC Run the following cell to delete the tables and files associated with this lesson.
 

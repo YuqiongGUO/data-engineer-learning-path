@@ -177,7 +177,7 @@ AS SELECT state, count(*) as customer_count, current_timestamp() updated_at
 -- MAGIC 
 -- MAGIC Within a DLT Pipeline, code in any notebook library can reference tables and views created in any other notebook library.
 -- MAGIC 
--- MAGIC Essentially, we can think of the scope of the database reference by the **`LIVE`** keyword to be at the DLT Pipeline level, rather than the individual notebook.
+-- MAGIC Essentially, we can think of the scope of the schema reference by the **`LIVE`** keyword to be at the DLT Pipeline level, rather than the individual notebook.
 -- MAGIC 
 -- MAGIC In the query below, we create a new view by joining the silver tables from our **`orders`** and **`customers`** datasets. Note that this view is not defined as streaming; as such, we will always capture the current valid **`email`** for each customer, and will automatically drop records for customers after they've been deleted from the **`customers_silver`** table.
 
@@ -205,7 +205,7 @@ CREATE LIVE VIEW subscribed_order_emails_v
 -- MAGIC 1. Click the blue **Start** button in the top right of the screen to update your pipeline and process any new records
 -- MAGIC 
 -- MAGIC <img src="https://files.training.databricks.com/images/icon_hint_24.png"> The link to this notebook can be found back in [DE 4.1 - DLT UI Walkthrough]($../DE 4.1 - DLT UI Walkthrough)<br/>
--- MAGIC in the printed instructions for **Task #2** under the section **Generate Pipline Configuration**
+-- MAGIC in the printed instructions for **Task #2** under the section **Generate Pipeline Configuration**
 
 -- COMMAND ----------
 

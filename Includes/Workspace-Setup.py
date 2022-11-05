@@ -27,10 +27,8 @@
 
 # COMMAND ----------
 
-import time
-
 # Start a timer so we can benchmark execution duration.
-setup_start = int(time.time())
+setup_start = dbgems.clock_start()
 
 # COMMAND ----------
 
@@ -40,15 +38,17 @@ setup_start = int(time.time())
 
 # COMMAND ----------
 
+from dbacademy.dbhelper import WorkspaceHelper
+
 # Setup the widgets to collect required parameters.
-from dbacademy.dbhelper import WorkspaceHelper # no other option for this course
-dbutils.widgets.dropdown("configure_for", WorkspaceHelper.ALL_USERS, [WorkspaceHelper.ALL_USERS], "Configure Workspace For")
+dbutils.widgets.dropdown("configure_for", WorkspaceHelper.CONFIGURE_FOR_ALL_USERS, 
+                         [WorkspaceHelper.CONFIGURE_FOR_ALL_USERS], "Configure Workspace For")
 
-# students_count is the reasonable estiamte to the maximum number of students
-dbutils.widgets.text("students_count", "", "Number of Students")
+# lab_id is the name assigned to this event/class or alternatively its class number
+dbutils.widgets.text(WorkspaceHelper.PARAM_LAB_ID, "", "Lab/Class ID")
 
-# event_name is the name assigned to this event/class or alternatively its class number
-dbutils.widgets.text("event_name", "", "Event Name/Class Number")
+# a general purpose description of the class
+dbutils.widgets.text(WorkspaceHelper.PARAM_DESCRIPTION, "", "Description")
 
 # COMMAND ----------
 
@@ -140,7 +140,7 @@ DA.client.jobs().delete_by_id(job_id)
 
 # COMMAND ----------
 
-print(f"Setup completed {DA.clock_stopped(setup_start)}")
+print(f"Setup completed {dbgems.clock_stopped(setup_start)}")
 
 # COMMAND ----------
 

@@ -45,7 +45,7 @@
 -- MAGIC 
 -- MAGIC  
 -- MAGIC ## Schemas
--- MAGIC Let's start by creating two schemas:
+-- MAGIC Let's start by creating two schemas (aka databases):
 -- MAGIC - One with no **`LOCATION`** specified
 -- MAGIC - One with **`LOCATION`** specified 
 
@@ -59,7 +59,7 @@ CREATE SCHEMA IF NOT EXISTS ${da.schema_name}_custom_location LOCATION '${da.pat
 -- MAGIC %md 
 -- MAGIC 
 -- MAGIC  
--- MAGIC Note that the location of the first schema is in the default location under **`dbfs:/user/hive/warehouse/`** and that the schema directory is the name of the schema with the **`.db`** extension
+-- MAGIC Note that the location of the first schema (database) is in the default location under **`dbfs:/user/hive/warehouse/`** and that the schema directory is the name of the schema with the **`.db`** extension
 
 -- COMMAND ----------
 

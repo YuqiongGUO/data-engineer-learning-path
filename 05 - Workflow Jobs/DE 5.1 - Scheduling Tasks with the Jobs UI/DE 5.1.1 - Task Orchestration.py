@@ -114,7 +114,7 @@ DA.validate_job_v1_config()
 # MAGIC 
 # MAGIC We will use it as part of a scheduled job in this step.
 # MAGIC 
-# MAGIC So that we can focus on Jobs and not Piplines, we are going to use the following utility command to create the pipline for us.
+# MAGIC So that we can focus on Jobs and not Pipelines, we are going to use the following utility command to create the pipline for us.
 
 # COMMAND ----------
 

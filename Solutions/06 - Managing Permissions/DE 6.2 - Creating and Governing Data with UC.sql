@@ -107,7 +107,7 @@ USE SCHEMA example
 -- MAGIC 
 -- MAGIC With all the necessary containment in place, let's set up tables and views. For this example, we'll use mock data to create and populate a *silver* managed table with synthetic patient heart rate data and a *gold* view that averages heart rate data per patient on a daily basis.
 -- MAGIC 
--- MAGIC Run the cells below, and click the **Data** icon in the left sidebar to explore the contents of the *example* schema. Note that we don't need to specify three levels when we specifying the table or view names below, since we selected a default catalog and schema.
+-- MAGIC Run the cells below, and click the **Data** icon in the left sidebar to explore the contents of the *example* schema. Note that we don't need to specify three levels when specifying the table or view names below, since we selected a default catalog and schema.
 
 -- COMMAND ----------
 

@@ -100,10 +100,10 @@ FROM cloud_files("${source}/orders", "json", map("cloudFiles.inferColumnTypes", 
 -- MAGIC * Select all of the remaining fields (except a list of 3 we're not interested in, including the original **`order_timestamp`**)
 -- MAGIC 
 -- MAGIC Note that the **`FROM`** clause has two constructs that you may not be familiar with:
--- MAGIC * The **`LIVE`** keyword is used in place of the database name to refer to the target database configured for the current DLT pipeline
+-- MAGIC * The **`LIVE`** keyword is used in place of the schema name to refer to the target schema configured for the current DLT pipeline
 -- MAGIC * The **`STREAM`** method allows users to declare a streaming data source for SQL queries
 -- MAGIC 
--- MAGIC Note that if no target database is declared during pipeline configuration, your tables won't be published (that is, they won't be registered to the metastore and made available for queries elsewhere). The target database can be easily changed when moving between different execution environments, meaning the same code can easily be deployed against regional workloads or promoted from a dev to prod environment without needing to hard-code database names.
+-- MAGIC Note that if no target schema is declared during pipeline configuration, your tables won't be published (that is, they won't be registered to the metastore and made available for queries elsewhere). The target schema can be easily changed when moving between different execution environments, meaning the same code can easily be deployed against regional workloads or promoted from a dev to prod environment without needing to hard-code schema names.
 -- MAGIC 
 -- MAGIC ### Data Quality Constraints
 -- MAGIC 

@@ -78,10 +78,20 @@ CREATE OR REPLACE TABLE events_raw
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("events_raw"), "Table named `events_raw` does not exist"
--- MAGIC assert spark.table("events_raw").columns == ['key', 'offset', 'partition', 'timestamp', 'topic', 'value'], "Please name the columns in the order provided above"
--- MAGIC assert spark.table("events_raw").dtypes == [('key', 'binary'), ('offset', 'bigint'), ('partition', 'int'), ('timestamp', 'bigint'), ('topic', 'string'), ('value', 'binary')], "Please make sure the column types are identical to those provided above"
--- MAGIC assert spark.table("events_raw").count() == 0, "The table should have 0 records"
+-- MAGIC suite = DA.tests.new("Define Schema")
+-- MAGIC expected_table = lambda: spark.table("events_raw")
+-- MAGIC suite.test_not_none(lambda: expected_table(), "Created the table \"events_raw\"")
+-- MAGIC suite.test_equals(lambda: expected_table().count(), 0, "The table should have 0 records")
+-- MAGIC 
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "key", "BinaryType")
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "offset", "LongType")
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "partition", "IntegerType")
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "timestamp", "LongType")
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "topic", "StringType")
+-- MAGIC suite.test_schema_field(lambda: expected_table().schema, "value", "BinaryType")
+-- MAGIC 
+-- MAGIC suite.display_results()
+-- MAGIC assert suite
 
 -- COMMAND ----------
 
@@ -120,8 +130,19 @@ SELECT * FROM events_raw
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("events_raw").count() == 2252, "The table should have 2252 records"
--- MAGIC assert set(row['timestamp'] for row in spark.table("events_raw").select("timestamp").limit(5).collect()) == {1593880885085, 1593880892303, 1593880889174, 1593880886106, 1593880889725}, "Make sure you have not modified the data provided"
+-- MAGIC suite = DA.tests.new("Validate events_raw")
+-- MAGIC expected_table = lambda: spark.table("events_raw")
+-- MAGIC suite.test_not_none(lambda: expected_table(), "Created the table \"events_raw\"")
+-- MAGIC suite.test_equals(lambda: expected_table().count(), 2252, "The table should have 2252 records")
+-- MAGIC 
+-- MAGIC first_five = lambda: [r["timestamp"] for r in expected_table().orderBy(F.col("timestamp").asc()).limit(5).collect()]
+-- MAGIC suite.test_sequence(first_five, [1593879303631, 1593879304224, 1593879305465, 1593879305482, 1593879305746], True, "First 5 values are correct")
+-- MAGIC 
+-- MAGIC last_five = lambda: [r["timestamp"] for r in expected_table().orderBy(F.col("timestamp").desc()).limit(5).collect()]
+-- MAGIC suite.test_sequence(last_five, [1593881096290, 1593881095799, 1593881093452, 1593881093394, 1593881092076], True, "Last 5 values are correct")
+-- MAGIC 
+-- MAGIC suite.display_results()
+-- MAGIC assert suite.passed
 
 -- COMMAND ----------
 
@@ -149,8 +170,16 @@ AS SELECT * FROM parquet.`${da.paths.datasets}/ecommerce/raw/item-lookup`
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("item_lookup").count() == 12, "The table should have 12 records"
--- MAGIC assert set(row['item_id'] for row in spark.table("item_lookup").select("item_id").orderBy('item_id').limit(5).collect()) == {'M_PREM_F', 'M_PREM_K', 'M_PREM_Q', 'M_PREM_T', 'M_STAN_F'}, "Make sure you have not modified the data provided"
+-- MAGIC suite = DA.tests.new("Validate item_lookup")
+-- MAGIC expected_table = lambda: spark.table("item_lookup")
+-- MAGIC suite.test_not_none(lambda: expected_table(), "Created the table \"item_lookup\"")
+-- MAGIC 
+-- MAGIC actual_values = lambda: [r["item_id"] for r in expected_table().collect()]
+-- MAGIC expected_values = ['M_PREM_Q','M_STAN_F','M_PREM_F','M_PREM_T','M_PREM_K','P_DOWN_S','M_STAN_Q','M_STAN_K','M_STAN_T','P_FOAM_S','P_FOAM_K','P_DOWN_K']
+-- MAGIC suite.test_sequence(actual_values, expected_values, False, "Contains the 12 expected item IDs")
+-- MAGIC 
+-- MAGIC suite.display_results()
+-- MAGIC assert suite.passed
 
 -- COMMAND ----------
 

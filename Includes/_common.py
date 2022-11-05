@@ -1,56 +1,49 @@
 # Databricks notebook source
-# def test_library_access():
-#     import requests
+def __validate_libraries():
+    import requests
+    try:
+        site = "https://github.com/databricks-academy/dbacademy"
+        response = requests.get(site)
+        error = f"Unable to access GitHub or PyPi resources (HTTP {response.status_code} for {site})."
+        assert response.status_code == 200, "{error} Please see the \"Troubleshooting | {section}\" section of the \"Version Info\" notebook for more information.".format(error=error, section="Cannot Install Libraries")
+    except Exception as e:
+        if type(e) is AssertionError: raise e
+        error = f"Unable to access GitHub or PyPi resources ({site})."
+        raise AssertionError("{error} Please see the \"Troubleshooting | {section}\" section of the \"Version Info\" notebook for more information.".format(error=error, section="Cannot Install Libraries")) from e
 
-#     sites = [
-#         "https://github.com/databricks-academy/dbacademy-gems",
-#         "https://github.com/databricks-academy/dbacademy-rest",
-#         "https://github.com/databricks-academy/dbacademy-helper",
-#         "https://pypi.org/simple/requests",
-#         "https://pypi.org/simple/urllib3",
-#         "https://pypi.org/simple/overrides",
-#         "https://pypi.org/simple/deprecated",
-#         "https://pypi.org/simple/wrapt",
-#         "https://pypi.org/simple/charset-normalizer",
-#         "https://pypi.org/simple/idna",
-#     ]
-#     for site in sites:
-#         response = requests.get(site)
-#         assert response.status_code == 200, f"Unable to access GitHub or PyPi resources (HTTP {response.status_code} for {site}). Please see the \"Troubleshooting | Cannot Install Libraries\" section of the \"Version Info\" notebook for more information."
-        
-# test_library_access()
+def __install_libraries():
+    global pip_command
+    version = spark.conf.get("dbacademy.library.version", "v2.0.3")
 
-# COMMAND ----------
+    try:
+        from dbacademy import dbgems  
+        installed_version = dbgems.lookup_current_module_version("dbacademy")
+        if installed_version == version:
+            pip_command = "list --quiet"  # Skipping pip install of pre-installed python library
+        else:
+            print(f"WARNING: The wrong version of dbacademy is attached to this cluster. Expected {version}, found {installed_version}.")
+            print(f"Installing the correct version.")
+            raise Exception("Forcing re-install")
 
-# def test_dbfs_writes(dir):
-#     import os
-#     from contextlib import redirect_stdout
-    
-#     file = f"{dir}/test.txt"
-#     try:
-#         with redirect_stdout(None):
-#             parent_dir = "/".join(dir.split("/")[:-1])
-            
-#             if not os.path.exists(parent_dir): os.mkdir(parent_dir)
-#             if not os.path.exists(dir): os.mkdir(dir)
-#             if os.path.exists(file): os.remove(file)
-            
-#             with open(file, "w") as f: f.write("Please delete this file")
-#             with open(file, "r") as f: f.read()
-#             os.remove(file)
-            
-#     except Exception as e:
-#         print(e)
-#         raise AssertionError(f"Unable to write to {file}. Please see the \"Troubleshooting | DBFS Writes\" section of the \"Version Info\" notebook for more information.")
-            
-# test_dbfs_writes("/dbfs/mnt/dbacademy-users")
-# test_dbfs_writes("/dbfs/mnt/dbacademy-datasets")
+    except Exception as e:
+        # The import fails if library is not attached to cluster
+        if not version.startswith("v"): library_url = f"git+https://github.com/databricks-academy/dbacademy@{version}"
+        else: library_url = f"https://github.com/databricks-academy/dbacademy/releases/download/{version}/dbacademy-{version[1:]}-py3-none-any.whl"
+
+        default_command = f"install --quiet --disable-pip-version-check {library_url}"
+        pip_command = spark.conf.get("dbacademy.library.install", default_command)
+
+        if pip_command != default_command:
+            print(f"WARNING: Using alternative library installation:\n| default: %pip {default_command}\n| current: %pip {pip_command}")
+        else:
+            # We are using the default libraries; next we need to verify that we can reach those libraries.
+            __validate_libraries()
+
+__install_libraries()
 
 # COMMAND ----------
 
-# MAGIC %pip install \
-# MAGIC git+https://github.com/databricks-academy/dbacademy@v1.0.2 \
-# MAGIC --quiet --disable-pip-version-check
+# MAGIC %pip $pip_command
 
 # COMMAND ----------
 
@@ -58,6 +51,7 @@
 
 # COMMAND ----------
 
+import pyspark.sql.functions as F
 from dbacademy import dbgems
 from dbacademy.dbhelper import DBAcademyHelper, Paths, CourseConfig, LessonConfig
 
@@ -87,7 +81,7 @@ lesson_config = LessonConfig(name = None,
 
 @DBAcademyHelper.monkey_patch
 def clone_source_table(self, table_name, source_path, source_name=None):
-    start = self.clock_start()
+    start = dbgems.clock_start()
 
     source_name = table_name if source_name is None else source_name
     print(f"Cloning the \"{table_name}\" table from \"{source_path}/{source_name}\".", end="...")
@@ -97,5 +91,5 @@ def clone_source_table(self, table_name, source_path, source_name=None):
         SHALLOW CLONE delta.`{source_path}/{source_name}`
         """)
     
-    print(self.clock_stopped(start))
+    print(dbgems.clock_stopped(start))
 

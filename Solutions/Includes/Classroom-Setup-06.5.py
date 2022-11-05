@@ -20,7 +20,7 @@ DA.conclude_setup()
 
 # COMMAND ----------
 
-DA.other_schema_name = f"{DA.lesson_config.initial_catalog}.{DA.to_schema_name(username=DA.username)}"
+DA.other_schema_name = f"{DA.lesson_config.initial_catalog}.{DA.to_schema_name(username=DA.username, lesson_name=DA.lesson_config.name)}"
 
 spark.sql(f"DROP DATABASE IF EXISTS {DA.other_schema_name} CASCADE")
 spark.sql(f"CREATE DATABASE {DA.other_schema_name}")

@@ -35,7 +35,7 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC ## Run Setup
--- MAGIC The first thing we're going to do is run a setup script. It will define a username, userhome, and database that is scoped to each user.
+-- MAGIC The first thing we're going to do is run a setup script. It will define a username, userhome, and schema that is scoped to each user.
 
 -- COMMAND ----------
 
@@ -97,7 +97,7 @@ WHEN NOT MATCHED AND u.type = "insert"
 -- MAGIC 
 -- MAGIC ## Examine Table Details
 -- MAGIC 
--- MAGIC Databricks uses a Hive metastore by default to register databases, tables, and views.
+-- MAGIC Databricks uses a Hive metastore by default to register schemas, tables, and views.
 -- MAGIC 
 -- MAGIC Using **`DESCRIBE EXTENDED`** allows us to see important metadata about our table.
 
@@ -123,7 +123,7 @@ DESCRIBE DETAIL students
 -- MAGIC 
 -- MAGIC Note the **`Location`** field.
 -- MAGIC 
--- MAGIC While we've so far been thinking about our table as just a relational entity within a database, a Delta Lake table is actually backed by a collection of files stored in cloud object storage.
+-- MAGIC While we've so far been thinking about our table as just a relational entity within a schema, a Delta Lake table is actually backed by a collection of files stored in cloud object storage.
 
 -- COMMAND ----------
 

@@ -46,7 +46,7 @@
 -- MAGIC 
 -- MAGIC Some syntax errors will be detected during the **Initializing** stage, as DLT is not able to properly parse the commands.
 -- MAGIC 
--- MAGIC Other syntax errors will be deteced during the **Setting up tables** stage.
+-- MAGIC Other syntax errors will be detected during the **Setting up tables** stage.
 -- MAGIC 
 -- MAGIC Note that because of the way DLT resolves the order of tables in the pipeline at different steps, you may sometimes see errors thrown for later stages first.
 -- MAGIC 

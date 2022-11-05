@@ -187,7 +187,7 @@ SELECT max(row_count) <= 1 no_duplicate_ids FROM (
 -- MAGIC from pyspark.sql.functions import count
 -- MAGIC 
 -- MAGIC display(dedupedDF
--- MAGIC     .groupby("user_id")
+-- MAGIC     .groupBy("user_id")
 -- MAGIC     .agg(count("*").alias("row_count"))
 -- MAGIC     .select((max("row_count") <= 1).alias("no_duplicate_ids")))
 
@@ -227,7 +227,7 @@ SELECT max(user_id_count) <= 1 at_most_one_id FROM (
 -- MAGIC 
 -- MAGIC The code below:
 -- MAGIC - Correctly scales and casts the **`user_first_touch_timestamp`** to a valid timestamp
--- MAGIC - Extracts the calendar data and clock time for this timestamp in human readable format
+-- MAGIC - Extracts the calendar date and clock time for this timestamp in human readable format
 -- MAGIC - Uses **`regexp_extract`** to extract the domains from the email column using regex
 
 -- COMMAND ----------
@@ -241,6 +241,18 @@ FROM (
     CAST(user_first_touch_timestamp / 1e6 AS timestamp) AS first_touch 
   FROM deduped_users
 )
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC from pyspark.sql.functions import date_format, regexp_extract
+-- MAGIC 
+-- MAGIC display(dedupedDF
+-- MAGIC     .withColumn("first_touch", (col("user_first_touch_timestamp") / 1e6).cast("timestamp"))
+-- MAGIC     .withColumn("first_touch_date", date_format("first_touch", "MMM d, yyyy"))
+-- MAGIC     .withColumn("first_touch_time", date_format("first_touch", "HH:mm:ss"))
+-- MAGIC     .withColumn("email_domain", regexp_extract("email", "(?<=@).+", 0))
+-- MAGIC )
 
 -- COMMAND ----------
 

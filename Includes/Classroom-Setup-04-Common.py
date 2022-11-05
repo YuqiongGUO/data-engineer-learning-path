@@ -66,6 +66,17 @@ class PipelineConfig():
 # COMMAND ----------
 
 @DBAcademyHelper.monkey_patch
+def get_dlt_policy(self):
+    from dbacademy.dbhelper import ClustersHelper
+
+    dlt_policy = DA.client.cluster_policies.get_by_name(ClustersHelper.POLICY_DLT_ONLY)
+    assert dlt_policy is not None, self.__troubleshoot_error(f"Missing the cluster policy \"{ClustersHelper.POLICY_DLT_ONLY}\".", "Workspace-Setup")
+    
+    return dlt_policy
+
+# COMMAND ----------
+
+@DBAcademyHelper.monkey_patch
 def get_pipeline_config(self, language):
     """
     Returns the configuration to be used by the student in configuring the pipeline.
@@ -92,12 +103,12 @@ def get_pipeline_config(self, language):
 
 @DBAcademyHelper.monkey_patch
 def print_pipeline_config(self, language):
-    """
-    Renders the configuration of the pipeline as HTML
-    """
+    "Provided by DBAcademy, this function renders the configuration of the pipeline as HTML"
+    from dbacademy.dbhelper import ClustersHelper
+
     config = self.get_pipeline_config(language)
     
-    width = "600px"
+    width = "100%"
     
     html = f"""<table style="width:100%">
     <tr>
@@ -112,6 +123,9 @@ def print_pipeline_config(self, language):
     <tr>
         <td style="white-space:nowrap; width:1em">Storage Location:</td>
         <td><input type="text" value="{self.paths.storage_location}" style="width: {width}"></td></tr>
+    <tr>
+        <td style="white-space:nowrap; width:1em">Policy:</td>
+        <td><input type="text" value="{ClustersHelper.POLICY_DLT_ONLY}" style="width: {width}"></td></tr>
     """
     
     for i, path in enumerate(config.notebooks):
@@ -119,7 +133,7 @@ def print_pipeline_config(self, language):
         <tr>
             <td style="white-space:nowrap; width:1em">Notebook #{i+1} Path:</td>
             <td><input type="text" value="{path}" style="width: {width}"></td></tr>"""
-    
+
     html += "</table>"
     
     displayHTML(html)
@@ -129,31 +143,31 @@ def print_pipeline_config(self, language):
 
 @DBAcademyHelper.monkey_patch
 def create_pipeline(self, language):
-    """
-    Creates the prescribed pipeline.
-    """
+    "Provided by DBAcademy, this function creates the prescribed pipline"
     
-    from dbacademy.dbrest import DBAcademyRestClient
-    client = DBAcademyRestClient()
-
     config = self.get_pipeline_config(language)
-    print(f"Creating the pipeline \"{config.pipeline_name}\"")
 
     # Delete the existing pipeline if it exists
-    client.pipelines().delete_by_name(config.pipeline_name)
+    self.client.pipelines().delete_by_name(config.pipeline_name)
 
     # Create the new pipeline
-    pipeline = client.pipelines().create(
+    response = self.client.pipelines().create(
         name = config.pipeline_name, 
         development=True,
         storage = self.paths.storage_location, 
         target = self.schema_name,
         notebooks = config.notebooks,
         configuration = {
-            "source": config.source
-        })
-    
-    self.pipeline_id = pipeline.get("pipeline_id")
+            "source": config.source,
+            "spark.master": "local[*]",
+        },
+        clusters=[{ 
+            "num_workers": 0,
+            "policy_id": self.get_dlt_policy().get("policy_id")
+        }]
+    )
+    self.pipeline_id = response.get("pipeline_id")
+    print(f"Created the pipeline \"{config.pipeline_name}\" ({self.pipeline_id})")
 
 
 # COMMAND ----------
@@ -185,28 +199,28 @@ def start_pipeline(self):
     print(f"The final state is {state}.")    
     assert state == "COMPLETED", f"Expected the state to be COMPLETED, found {state}"
 
-
 # COMMAND ----------
 
 @DBAcademyHelper.monkey_patch
 def validate_pipeline_config(self, pipeline_language):
     "Provided by DBAcademy, this function validates the configuration of the pipeline"
     import json
+    from dbacademy.dbhelper import ClustersHelper
     
     config = self.get_pipeline_config(pipeline_language)
     pipeline = self.client.pipelines().get_by_name(config.pipeline_name)
     
     suite = DA.tests.new("Pipeline Config")
-    suite.test_not_none(pipeline, description=f"Create the pipeline \"<b>{config.pipeline_name}</b>\".", hint="Double check the spelling.")
+    suite.test_not_none(lambda: pipeline, description=f"Create the pipeline \"<b>{config.pipeline_name}</b>\".", hint="Double check the spelling.")
     
     if pipeline is None: pipeline = {}
     spec = pipeline.get("spec", {})
     
     storage = spec.get("storage", None)
-    suite.test_equals(storage, DA.paths.storage_location, f"Set the storage location to \"<b>{DA.paths.storage_location}</b>\".", hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
+    suite.test_equals(lambda: storage, DA.paths.storage_location, f"Set the storage location to \"<b>{DA.paths.storage_location}</b>\".", hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
     
     target = spec.get("target", None)
-    suite.test_equals(target, DA.schema_name, f"Set the target to \"<b>{DA.schema_name}</b>\".", hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
+    suite.test_equals(lambda: target, DA.schema_name, f"Set the target to \"<b>{DA.schema_name}</b>\".", hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
     
     libraries = spec.get("libraries", [])
     libraries = [l.get("notebook", {}).get("path") for l in libraries]
@@ -223,28 +237,40 @@ def validate_pipeline_config(self, pipeline_language):
         hint += f"""<li>{library}</li>"""
     hint += "</ul>"
     
-    suite.test(test_function=test_notebooks, actual_value=libraries, description="Configure the three Notebook libraries", hint=hint)
+    suite.test(test_function=test_notebooks, actual_value=libraries, description="Configure the three Notebook libraries.", hint=hint)
     
-    suite.test_length(spec.get("configuration", {}), 2, 
+    suite.test_length(lambda: spec.get("configuration", {}), 2, 
                       description=f"Set the two configuration parameters.", 
                       hint=f"Found [[LEN_ACTUAL_VALUE]] configuration parameter(s).")
     
-    suite.test_equals(spec.get("configuration", {}).get("source"), config.source, 
+    suite.test_equals(lambda: spec.get("configuration", {}).get("source"), config.source, 
                       description=f"Set the \"<b>source</b>\" configuration parameter to \"<b>{config.source}</b>\".", 
                       hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
     
-    suite.test_equals(spec.get("configuration", {}).get("spark.master"), "local[*]", 
+    suite.test_equals(lambda: spec.get("configuration", {}).get("spark.master"), "local[*]", 
                       description=f"Set the \"<b>spark.master</b>\" configuration parameter to \"<b>local[*]</b>\".", 
                       hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\".")
     
-    suite.test_is_none(spec.get("clusters",[{}])[0].get("autoscale"), 
-                       description=f"Autoscaling should be disabled.")
+    suite.test_length(lambda: spec.get("clusters"), expected_length=1, 
+                      description=f"Expected one and only one cluster definition.",
+                      hint="Edit the config via the JSON interface to remove the second+ cluster definitions")
     
-    suite.test_equals(spec.get("clusters", [{}])[0].get("num_workers"), 0, 
-                      description=f"The number of spark workers should be 0.", 
+    suite.test_is_none(lambda: spec.get("clusters")[0].get("autoscale"), 
+                       description=f"Autoscaling should be disabled.")
+
+    def test_cluster():
+        cluster = spec.get("clusters")[0]
+        policy_id = cluster.get("policy_id")
+        policy_name = None if policy_id is None else self.client.cluster_policies.get_by_id(policy_id).get("name")
+        return policy_id == self.get_dlt_policy().get("policy_id")
+        
+    suite.test(test_function=test_cluster, actual_value=None, description=f"The cluster policy should be <b>\"{ClustersHelper.POLICY_DLT_ONLY}\"</b>.")
+    
+    suite.test_equals(lambda: spec.get("clusters")[0].get("num_workers"), 0, 
+                      description=f"The number of spark workers should be <b>0</b>.", 
                       hint=f"Found [[ACTUAL_VALUE]] workers.")
 
-    suite.test_true(spec.get("development"), 
+    suite.test_true(lambda: spec.get("development"), 
                     description=f"The pipeline mode should be set to \"<b>Development</b>\".")
     
     suite.test(test_function = lambda: {spec.get("channel") is None or spec.get("channel").upper() == "CURRENT"}, 
@@ -252,30 +278,14 @@ def validate_pipeline_config(self, pipeline_language):
                description=f"The channel should be set to \"<b>Current</b>\".", 
                hint=f"Found \"<b>[[ACTUAL_VALUE]]</b>\"")
     
-    suite.test_true(spec.get("photon"), 
+    suite.test_true(lambda: spec.get("photon"), 
                     description=f"Photon should be enabled.")
     
-    suite.test_false(spec.get("continuous"), 
+    suite.test_false(lambda: spec.get("continuous"), 
                      description=f"Expected the Pipeline mode to be \"<b>Triggered</b>\".", 
                      hint=f"Found \"<b>Continuous</b>\".")
 
-    if suite.passed:
-        policy = self.client.cluster_policies.get_by_name("Student's DLT-Only Policy")
-        if policy is not None:
-            cluster = { 
-                "num_workers": 0,
-                "label": "default", 
-                "policy_id": policy.get("policy_id")
-            }
-            self.client.pipelines.create_or_update(name = config.pipeline_name,
-                                                   storage = DA.paths.storage_location,
-                                                   target = DA.schema_name,
-                                                   notebooks = config.notebooks,
-                                                   configuration = {
-                                                       "spark.master": "local[*]",
-                                                       "source": config.source,
-                                                   },
-                                                   clusters=[cluster])
     suite.display_results()
+    assert suite.passed, "One or more tests failed; please double check your work."
 
 

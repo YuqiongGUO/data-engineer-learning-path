@@ -66,7 +66,7 @@
 -- COMMAND ----------
 
 -- TODO
-<FILL_IN> f"{DA.paths.kafka_events}" 
+<FILL_IN> "${DA.paths.kafka_events}" 
 
 -- COMMAND ----------
 

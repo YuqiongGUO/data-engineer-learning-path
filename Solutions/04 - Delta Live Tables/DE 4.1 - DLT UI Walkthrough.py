@@ -38,8 +38,8 @@
 
 # COMMAND ----------
 
-pipeline_language = "SQL"
-# pipeline_language = "Python"
+#pipeline_language = "SQL"
+pipeline_language = "Python"
 
 DA.print_pipeline_config(pipeline_language)
 
@@ -58,7 +58,7 @@ DA.print_pipeline_config(pipeline_language)
 # MAGIC 
 # MAGIC We will later add Notebooks #2 & #3 to the pipeline but for now, let's focus on just Notebook #1:
 # MAGIC 
-# MAGIC 1. Click the **Workflows** button in the sidebar
+# MAGIC 1. Click the **Workflows** button in the sidebar.
 # MAGIC 1. Select the **Delta Live Tables** tab.
 # MAGIC 1. Click the **Create Pipeline** button.
 # MAGIC 1. In the field **Product edition**, select the value "**Advanced**".
@@ -67,10 +67,9 @@ DA.print_pipeline_config(pipeline_language)
 # MAGIC     * Though this document is a standard Databricks Notebook, the syntax is specialized to DLT table declarations.
 # MAGIC     * We will be exploring the syntax in the exercise that follows.
 # MAGIC     * Notebooks #2 and #3 will be added in later lessons
-# MAGIC 1. Configure the Source
-# MAGIC     1. Click the **Add configuration** button
-# MAGIC     1. In the field **Key**, enter the word "**source**"
-# MAGIC     1. In the field **Value**, enter the **Source** value specified in the cell above
+# MAGIC 1. Under **Configuration**, add two configuration parameters:
+# MAGIC    * Click **Add configuration**, set the "key" to **spark.master** and the "value" to **local[\*]**. This is so that our cluster will run as a Single Node as opposed to a more expensive multi-node cluster.
+# MAGIC    * Click **Add configuration**, set the "key" to **source** and the "value" to the value provided in the cell above. This will be used as a parameter to the pipline specifying the source of our pipeline's data stream.
 # MAGIC 1. In the field **Storage location**, enter the value specified in the cell above.
 # MAGIC     * This optional field allows the user to specify a location to store logs, tables, and other information related to pipeline execution. If not specified, DLT will automatically generate a directory.
 # MAGIC 1. Set **Pipeline Mode** to **Triggered**.
@@ -81,6 +80,12 @@ DA.print_pipeline_config(pipeline_language)
 # MAGIC 1. Disable autoscaling by unchecking **Enable autoscaling**.
 # MAGIC     * **Enable autoscaling**, **Min Workers** and **Max Workers** control the worker configuration for the underlying cluster processing the pipeline.
 # MAGIC     * Notice the DBU estimate provided, similar to that provided when configuring interactive clusters.
+# MAGIC 1. Set the number of **`workers`** to **`0`** (zero). 
+# MAGIC     * This value works in conjunction with the **spark.master** paramter defined above to configure the cluster as a Single Node cluster.
+# MAGIC 1. Check the **Use Photon Acceleration** box.
+# MAGIC 1. For **Channel**, select **Current**
+# MAGIC 1. For **Policy**, select the value provided in the cell above.
+# MAGIC     
 
 # COMMAND ----------
 
